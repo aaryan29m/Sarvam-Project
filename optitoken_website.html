@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OptiToken | AI Cost & Token Optimization Engine</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #090d16;
+      color: #f1f5f9;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .glow-cyan {
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.25);
+    }
+    .glow-emerald {
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+    }
+    .removed-token {
+      background-color: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      text-decoration: line-through;
+      padding: 0 4px;
+      border-radius: 4px;
+    }
+    .kept-token {
+      background-color: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      padding: 0 4px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+  <!-- Top Navigation -->
+  <header class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-emerald-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-cyan-500/20">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div>
+          <span class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">OptiToken</span>
+          <span class="text-xs ml-2 px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800/50 font-mono">v1.0.0</span>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div class="hidden sm:flex items-center px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs text-slate-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-2"></span>
+          Gateway Online (Port 8000)
+        </div>
+        <a href="https://github.com" target="_blank" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition flex items-center gap-2">
+          <i class="fa-brands fa-github text-sm"></i> GitHub
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Hero & Metrics Bar -->
+  <main class="flex-1 max-w-7xl mx-auto px-6 py-8 w-full space-y-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+        <div class="text-xs uppercase tracking-wider text-slate-400 font-medium">Aggregated Tokens Saved</div>
+        <div class="text-2xl font-black text-white mt-1 font-mono" id="stat-tokens-saved">412,850</div>
+        <div class="text-xs text-emerald-400 mt-2 flex items-center font-semibold">
+          <i class="fa-solid fa-arrow-trend-up mr-1"></i> +68.4% efficiency vs uncompressed
+        </div>
+      </div>
+
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+        <div class="text-xs uppercase tracking-wider text-slate-400 font-medium">Semantic Cache Hit Rate</div>
+        <div class="text-2xl font-black text-white mt-1 font-mono" id="stat-cache-hit">42.8%</div>
+        <div class="text-xs text-cyan-400 mt-2 flex items-center">
+          <i class="fa-solid fa-bolt mr-1"></i> < 8ms retrieval speed
+        </div>
+      </div>
+
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+        <div class="text-xs uppercase tracking-wider text-slate-400 font-medium">Estimated Cloud Cost Cut</div>
+        <div class="text-2xl font-black text-emerald-400 mt-1 font-mono" id="stat-cost-saved">$1,238.55</div>
+        <div class="text-xs text-slate-400 mt-2 flex items-center">
+          Based on blended frontier model pricing
+        </div>
+      </div>
+
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+        <div class="text-xs uppercase tracking-wider text-slate-400 font-medium">Active Model Router</div>
+        <div class="text-2xl font-black text-cyan-400 mt-1 font-mono">Dynamic 3-Tier</div>
+        <div class="text-xs text-slate-400 mt-2 flex items-center">
+          Groq / Gemini Flash / GPT-4o
+        </div>
+      </div>
+    </div>
+
+    <!-- Playground Simulator -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Input Column -->
+      <div class="lg:col-span-7 bg-slate-900/80 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-terminal text-cyan-400"></i> Interactive Prompt Sandbox
+            </h2>
+            <div class="flex gap-2">
+              <button onclick="setSamplePrompt('customer')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Support Query</button>
+              <button onclick="setSamplePrompt('math')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Math Reasoning</button>
+              <button onclick="setSamplePrompt('code')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Code Refactor</button>
+            </div>
+          </div>
+
+          <div class="relative">
+            <textarea id="promptInput" rows="6" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-4 text-slate-200 font-mono text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition leading-relaxed" placeholder="Type or paste your raw prompt here..."></textarea>
+          </div>
+
+          <!-- Optimization Toggles -->
+          <div class="grid grid-cols-2 gap-3 pt-2">
+            <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <input type="checkbox" id="enableCompression" checked class="w-4 h-4 rounded text-cyan-500 bg-slate-900 border-slate-700 focus:ring-0">
+              <div>
+                <div class="text-xs font-semibold text-white">Prompt Compression</div>
+                <div class="text-[11px] text-slate-400">Prunes filler phrases & whitespace</div>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <input type="checkbox" id="enableCaching" checked class="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-slate-700 focus:ring-0">
+              <div>
+                <div class="text-xs font-semibold text-white">Semantic Redis Cache</div>
+                <div class="text-[11px] text-slate-400">Instant cache return on repeat</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="pt-6 flex items-center justify-between">
+          <div class="text-xs text-slate-400 font-mono" id="inputTokenEstimate">
+            Tokens: ~<span class="text-white font-bold" id="origTokenCount">0</span>
+          </div>
+          <button onclick="runSimulation()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-400 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/20 hover:opacity-95 transition flex items-center gap-2">
+            <i class="fa-solid fa-play"></i> Process via Gateway
+          </button>
+        </div>
+      </div>
+
+      <!-- Execution Breakdown Column -->
+      <div class="lg:col-span-5 bg-slate-900/80 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2 mb-4">
+            <i class="fa-solid fa-microchip text-emerald-400"></i> Dispatch Pipeline
+          </h2>
+
+          <div class="space-y-4">
+            <!-- Cache Status -->
+            <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
+              <div>
+                <div class="text-xs text-slate-400">Cache Check</div>
+                <div class="text-sm font-semibold text-white mt-0.5" id="pipelineCacheStatus">Awaiting prompt...</div>
+              </div>
+              <span id="pipelineCacheBadge" class="px-2.5 py-1 text-xs rounded-full font-mono bg-slate-800 text-slate-400 border border-slate-700">STANDBY</span>
+            </div>
+
+            <!-- Routing Decision -->
+            <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
+              <div>
+                <div class="text-xs text-slate-400">Adaptive Route Selected</div>
+                <div class="text-sm font-semibold text-cyan-400 font-mono mt-0.5" id="pipelineRouteModel">-</div>
+              </div>
+              <span id="pipelineRouteTier" class="px-2.5 py-1 text-xs rounded-full font-mono bg-slate-800 text-slate-400 border border-slate-700">UNROUTED</span>
+            </div>
+
+            <!-- Token Compression Delta -->
+            <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+              <div class="flex justify-between text-xs text-slate-400 mb-2">
+                <span>Prompt Compression Ratio</span>
+                <span class="text-emerald-400 font-mono font-bold" id="compressionRatio">0%</span>
+              </div>
+              <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div id="compressionBar" class="bg-gradient-to-r from-cyan-500 to-emerald-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+              <div class="flex justify-between items-center text-xs mt-3 text-slate-300 font-mono">
+                <div>Original: <span id="statOrig" class="text-white font-bold">0</span> tok</div>
+                <div>Forwarded: <span id="statForwarded" class="text-emerald-400 font-bold">0</span> tok</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-800/80">
+          <div class="text-xs text-slate-400 mb-2 uppercase tracking-wider font-semibold">Compressed Prompt Preview</div>
+          <div id="compressedVisual" class="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-xs font-mono text-slate-300 leading-relaxed min-h-[70px]">
+            Execute a prompt to observe pruning...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Telemetry & Live Charts -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
+        <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-chart-line text-cyan-400"></i> Daily Token Reduction (Cumulative)
+        </h3>
+        <canvas id="tokenSavingsChart" height="180"></canvas>
+      </div>
+
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
+        <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-chart-pie text-emerald-400"></i> Traffic Distribution by Tier
+        </h3>
+        <canvas id="routingDistributionChart" height="180"></canvas>
+      </div>
+    </div>
+
+    <!-- Quick Integration Snippet -->
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-code text-cyan-400"></i> 1-Line Drop-in Integration
+          </h3>
+          <p class="text-xs text-slate-400 mt-1">Replace standard OpenAI endpoint with your self-hosted OptiToken proxy.</p>
+        </div>
+        <span class="text-xs font-mono text-slate-400 bg-slate-800 px-3 py-1 rounded-lg">Python (OpenAI SDK)</span>
+      </div>
+      <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs text-slate-300 overflow-x-auto leading-relaxed">
+<span class="text-purple-400">from</span> openai <span class="text-purple-400">import</span> OpenAI
+
+<span class="text-slate-500"># Direct all requests through the OptiToken gateway</span>
+client = OpenAI(
+    base_url=<span class="text-emerald-300">"http://localhost:8000/v1"</span>,
+    api_key=<span class="text-emerald-300">"sk-optitoken-local"</span>
+)
+
+response = client.chat.completions.create(
+    model=<span class="text-emerald-300">"auto"</span>,  <span class="text-slate-500"># OptiToken auto-routes based on token complexity</span>
+    messages=[{<span class="text-cyan-300">"role"</span>: <span class="text-emerald-300">"user"</span>, <span class="text-cyan-300">"content"</span>: <span class="text-emerald-300">"How does quantum error correction work?"</span>}]
+)
+<span class="text-yellow-400">print</span>(response.choices[<span class="text-orange-300">0</span>].message.content)
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800/80 bg-slate-950/70 py-6 text-center text-xs text-slate-400">
+    <p>© 2026 OptiToken Engine. Open-source optimization proxy built for high-throughput AI workloads.</p>
+  </footer>
+
+  <script>
+    const samplePrompts = {
+      customer: "Please note that I am writing to kindly inquire regarding the status of order #98234. As you know, I ordered this last Tuesday. Feel free to reach out anytime and let me know if you need any additional verification details. Thank you very much in advance for your support!",
+      math: "Please derive step-by-step and mathematically prove the convergence bound of stochastic gradient descent with momentum under non-convex Lipschitz continuous smooth assumptions.",
+      code: "def calculate_matrix_multiplication(A, B):\n    # Standard three nested loop O(N^3) implementation\n    rows_A, cols_A = len(A), len(A[0])\n    rows_B, cols_B = len(B), len(B[0])\n    result = [[0 for _ in range(cols_B)] for _ in range(rows_A)]\n    for i in range(rows_A):\n        for j in range(cols_B):\n            for k in range(cols_A):\n                result[i][j] += A[i][k] * B[k][j]\n    return result"
+    };
+
+    const simulatedCache = new Set();
+
+    function setSamplePrompt(type) {
+      document.getElementById('promptInput').value = samplePrompts[type];
+      updateTokenEstimate();
+    }
+
+    function updateTokenEstimate() {
+      const val = document.getElementById('promptInput').value;
+      const count = Math.max(0, Math.ceil(val.length / 4));
+      document.getElementById('origTokenCount').innerText = count;
+    }
+
+    document.getElementById('promptInput').addEventListener('input', updateTokenEstimate);
+
+    function runSimulation() {
+      const prompt = document.getElementById('promptInput').value.trim();
+      if (!prompt) {
+        alert("Please enter a prompt to process.");
+        return;
+      }
+
+      const origTokens = Math.max(1, Math.ceil(prompt.length / 4));
+      const useCompression = document.getElementById('enableCompression').checked;
+      const useCaching = document.getElementById('enableCaching').checked;
+
+      // 1. Caching Check
+      const isHit = useCaching && simulatedCache.has(prompt);
+      const cacheStatusEl = document.getElementById('pipelineCacheStatus');
+      const cacheBadgeEl = document.getElementById('pipelineCacheBadge');
+
+      if (isHit) {
+        cacheStatusEl.innerText = "HIT - Instant Response from Redis";
+        cacheBadgeEl.innerText = "CACHE HIT (0ms)";
+        cacheBadgeEl.className = "px-2.5 py-1 text-xs rounded-full font-mono bg-emerald-950 text-emerald-400 border border-emerald-700/50";
+      } else {
+        cacheStatusEl.innerText = "MISS - Forwarding through Router";
+        cacheBadgeEl.innerText = "CACHE MISS";
+        cacheBadgeEl.className = "px-2.5 py-1 text-xs rounded-full font-mono bg-slate-800 text-slate-300 border border-slate-700";
+        if (useCaching) simulatedCache.add(prompt);
+      }
+
+      // 2. Dynamic Routing Logic
+      const lower = prompt.toLowerCase();
+      let routeModel = "groq/llama-3.1-8b-instant";
+      let routeTier = "FAST TIER";
+      let tierClass = "bg-cyan-950 text-cyan-400 border border-cyan-800/50";
+
+      if (lower.includes("prove") || lower.includes("derive") || lower.includes("mathematical") || prompt.length > 500) {
+        routeModel = "gpt-4o-mini (Deep Reasoner)";
+        routeTier = "REASONING TIER";
+        tierClass = "bg-purple-950 text-purple-400 border border-purple-800/50";
+      } else if (prompt.includes("def ") || prompt.includes("class ") || prompt.length > 150) {
+        routeModel = "gemini-1.5-flash";
+        routeTier = "BALANCED TIER";
+        tierClass = "bg-blue-950 text-blue-400 border border-blue-800/50";
+      }
+
+      document.getElementById('pipelineRouteModel').innerText = routeModel;
+      const tierEl = document.getElementById('pipelineRouteTier');
+      tierEl.innerText = routeTier;
+      tierEl.className = `px-2.5 py-1 text-xs rounded-full font-mono ${tierClass}`;
+
+      // 3. Compression Logic
+      let prunedText = prompt;
+      let visualHtml = prompt;
+      let savedTokens = 0;
+
+      if (useCompression) {
+        const fillers = [
+          /please note that/gi,
+          /kindly be advised that/gi,
+          /as you know/gi,
+          /feel free to/gi,
+          /let me know if you need any additional verification details/gi,
+          /thank you very much in advance for your support!/gi
+        ];
+
+        fillers.forEach(pattern => {
+          prunedText = prunedText.replace(pattern, '');
+        });
+
+        // Normalize multiple spaces
+        prunedText = prunedText.replace(/\s{2,}/g, ' ').trim();
+        savedTokens = Math.max(0, origTokens - Math.max(1, Math.ceil(prunedText.length / 4)));
+        if (isHit) savedTokens = origTokens; // 100% saved on cache hit
+
+        // Visualizer
+        visualHtml = prompt
+          .replace(/please note that/gi, '<span class="removed-token">please note that</span>')
+          .replace(/kindly/gi, '<span class="removed-token">kindly</span>')
+          .replace(/as you know/gi, '<span class="removed-token">as you know</span>')
+          .replace(/thank you very much in advance for your support!/gi, '<span class="removed-token">thank you very much in advance for your support!</span>');
+      }
+
+      const forwardedTokens = isHit ? 0 : Math.max(1, origTokens - savedTokens);
+      const ratio = origTokens > 0 ? Math.round((savedTokens / origTokens) * 100) : 0;
+
+      document.getElementById('statOrig').innerText = origTokens;
+      document.getElementById('statForwarded').innerText = forwardedTokens;
+      document.getElementById('compressionRatio').innerText = `${ratio}%`;
+      document.getElementById('compressionBar').style.width = `${ratio}%`;
+      document.getElementById('compressedVisual').innerHTML = visualHtml;
+    }
+
+    // Initialize Charts
+    window.addEventListener('DOMContentLoaded', () => {
+      // Savings Chart
+      new Chart(document.getElementById('tokenSavingsChart'), {
+        type: 'line',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{
+            label: 'Tokens Saved (k)',
+            data: [35, 62, 85, 120, 195, 290, 412],
+            borderColor: '#06b6d4',
+            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+
+      // Distribution Chart
+      new Chart(document.getElementById('routingDistributionChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Fast (Llama 8B)', 'Balanced (Gemini Flash)', 'Deep (GPT-4o)', 'Cached (Redis)'],
+          datasets: [{
+            data: [45, 30, 10, 15],
+            backgroundColor: ['#06b6d4', '#3b82f6', '#a855f7', '#10b981'],
+            borderColor: '#090d16',
+            borderWidth: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#cbd5e1', font: { size: 11 } } }
+          }
+        }
+      });
+
+      // Initialize with default query
+      setSamplePrompt('customer');
+    });
+  </script>
+</body>
+</html>
